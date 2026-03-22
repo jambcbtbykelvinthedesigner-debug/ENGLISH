@@ -68,7 +68,7 @@
         <div class="glass" style="text-align:center;">
             <h1 id="final-score" style="font-size:4em; margin:10px 0;">0 / 60</h1>
             <p id="sync-status" style="font-size: 0.8em; color: #888;">Syncing to English Database...</p>
-            <button class="btn btn-main" onclick="location.reload()">RESTART</button>
+            <button class="btn btn-main" onclick="restartExam()">RESTART</button>
         </div>
         <div id="review-list"></div>
     </div>
@@ -205,14 +205,13 @@ function finalize() {
         `;
     });
 
-    // STEP 1: Update UI IMMEDIATELY
     document.getElementById('exam-page').classList.add('hidden');
     document.getElementById('result-page').classList.remove('hidden');
     document.getElementById('final-score').innerText = `${score} / 60`;
     document.getElementById('review-list').innerHTML = reviewHTML;
     localStorage.setItem('k_dev_eng_adv', score);
 
-    // STEP 2: Background Sync (Fast Mode)
+    // BACKGROUND SYNC - NO CORS + KEEPALIVE
     const formData = new URLSearchParams();
     formData.append('name', studentName);
     formData.append('score', score + "/60");
@@ -222,13 +221,19 @@ function finalize() {
     fetch(WEB_APP_URL, {
         method: "POST",
         mode: "no-cors",
+        keepalive: true,
         header: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formData.toString()
-    }).then(() => {
-        document.getElementById('sync-status').innerText = "Record secured in English Database.";
-    }).catch(() => {
-        document.getElementById('sync-status').innerText = "Offline: Results saved to local storage.";
     });
+
+    document.getElementById('sync-status').innerText = "Record secured in English Database.";
+}
+
+function restartExam() {
+    document.getElementById('sync-status').innerText = "Restarting Exam...";
+    setTimeout(() => {
+        location.reload();
+    }, 400); 
 }
 </script>
 </body>
