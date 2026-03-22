@@ -27,10 +27,10 @@
         input[type="radio"] { display: none; }
         .btn { padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; }
         .btn-main { background: var(--dev-blue); color: #000; }
-        .btn-disabled { background: #333 !important; color: #777 !important; cursor: not-allowed; }
+        .btn-disabled { background: #1a1a1a !important; color: #444 !important; cursor: not-allowed; border: 1px solid #333; }
         .wa-btn { position: fixed; bottom: 20px; right: 20px; background: var(--wa-green); color: white; padding: 12px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; z-index: 1000; }
         .hidden { display: none; }
-        .review-card { border-left: 5px solid transparent; margin-bottom: 15px; }
+        .review-card { border-left: 6px solid transparent; margin-bottom: 15px; text-align: left; }
         .review-correct { border-left-color: var(--success); }
         .review-wrong { border-left-color: var(--fail); }
         footer { text-align: center; color: #555; font-size: 0.75em; padding: 20px; }
@@ -71,10 +71,10 @@
     <div id="result-page" class="hidden">
         <div class="glass" style="text-align:center;">
             <h1 id="final-score" style="font-size:4em; margin:10px 0;">0 / 60</h1>
-            <p id="sync-status" style="font-size: 0.9em; color: var(--dev-blue);">Database Sync Initialized...</p>
-            <button id="restart-btn" class="btn btn-disabled" disabled onclick="location.reload()">RESTART (15s)</button>
+            <p id="sync-status" style="font-size: 0.9em; color: var(--dev-blue); margin-bottom: 15px;">Syncing with Designer's Database...</p>
+            <button id="restart-btn" class="btn btn-disabled" disabled onclick="location.reload()">RESTART (1:30)</button>
         </div>
-        <h3 style="text-align:center; color:var(--dev-blue)">DETAILED REVIEW</h3>
+        <h3 style="text-align:center; color:var(--dev-blue); text-transform: uppercase; letter-spacing: 1px;">Exam Review</h3>
         <div id="review-list"></div>
     </div>
 
@@ -84,7 +84,6 @@
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbypAjBMxjI7fOJshx64Qq0_r2XYPxYgatKbgPd-IGTQugF5iKdVfFd2vlC26QIurakNag/exec";
 
-// ... (Your masterDB array goes here - exactly as you had it)
 const masterDB = [
     {q:"Which of the following contains the sound /ʧ/?", a:"Chastity", ops:["Chassis","Champagne","Chastity","Character"]},
     {q:"Choose the correct concord: A range of mountains ______ visible from the balcony.", a:"Is", ops:["Is","Are","Were","Have been"]},
@@ -206,11 +205,11 @@ function finalize() {
         <div class="glass review-card ${isCorrect ? 'review-correct' : 'review-wrong'}">
             <b style="color:var(--dev-blue)">QUESTION ${i+1}:</b><br>
             <p>${itm.q}</p>
-            <div style="font-size:0.9em;">
+            <div style="font-size:0.95em; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
                 <span style="color:${isCorrect ? 'var(--success)' : 'var(--fail)'}">
-                    <b>Your Choice:</b> ${userAns} ${isCorrect ? '✔' : '✘'}
+                    <b>Your Answer:</b> ${userAns} ${isCorrect ? '✔' : '✘'}
                 </span><br>
-                ${!isCorrect ? `<b>Correct:</b> <span style="color:var(--success)">${itm.a}</span>` : ''}
+                ${!isCorrect ? `<b>Correct Choice:</b> <span style="color:var(--success)">${itm.a}</span>` : ''}
             </div>
         </div>`;
     });
@@ -236,24 +235,29 @@ function finalize() {
         body: formData.toString()
     });
 
-    startRestartTimer();
+    startRestartCountdown(90); // 90 seconds = 1 minute 30 seconds
 }
 
-function startRestartTimer() {
-    let countdown = 15;
+function startRestartCountdown(seconds) {
+    let timeLeft = seconds;
     const btn = document.getElementById('restart-btn');
     const status = document.getElementById('sync-status');
     
     const interval = setInterval(() => {
-        countdown--;
-        btn.innerText = `RESTART (${countdown}s)`;
-        if(countdown <= 0) {
+        timeLeft--;
+        let m = Math.floor(timeLeft / 60);
+        let s = timeLeft % 60;
+        
+        btn.innerText = `RESTART (${m}:${s < 10 ? '0' : ''}${s})`;
+        
+        if(timeLeft <= 0) {
             clearInterval(interval);
             btn.innerText = "RESTART EXAM";
             btn.disabled = false;
             btn.classList.remove('btn-disabled');
             btn.classList.add('btn-main');
-            status.innerText = "Database sync finalized. Ready to restart.";
+            status.innerText = "Database sync finalized. You can now restart.";
+            status.style.color = "var(--success)";
         }
     }, 1000);
 }
