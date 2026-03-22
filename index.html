@@ -79,7 +79,6 @@
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbypAjBMxjI7fOJshx64Qq0_r2XYPxYgatKbgPd-IGTQugF5iKdVfFd2vlC26QIurakNag/exec";
 
-// 60 HARD UNIQUE QUESTIONS (NO PLACEHOLDERS, NO REPEATS)
 const masterDB = [
     {q:"Which of the following contains the sound /ʧ/?", a:"Chastity", ops:["Chassis","Champagne","Chastity","Character"]},
     {q:"Choose the correct concord: A range of mountains ______ visible from the balcony.", a:"Is", ops:["Is","Are","Were","Have been"]},
@@ -155,7 +154,6 @@ function initExam() {
     if(!studentName) { alert("Designer says: Enter name first!"); return; }
     document.getElementById('start-page').classList.add('hidden');
     document.getElementById('exam-page').classList.remove('hidden');
-    // Final check: Use actual 60 questions from DB
     quiz = masterDB.slice(0, 60); 
     drawNav(); render();
     ticker = setInterval(() => {
@@ -196,9 +194,7 @@ function finalize() {
     quiz.forEach((itm, i) => {
         let userAns = stored[i] || "No Answer";
         let correct = itm.a;
-
         if(userAns === correct) score++;
-
         reviewHTML += `
         <div class="glass" style="margin-top:10px;">
             <b>Question ${i+1}</b><br>
@@ -209,25 +205,29 @@ function finalize() {
         `;
     });
 
+    // STEP 1: Update UI IMMEDIATELY
     document.getElementById('exam-page').classList.add('hidden');
     document.getElementById('result-page').classList.remove('hidden');
-
     document.getElementById('final-score').innerText = `${score} / 60`;
     document.getElementById('review-list').innerHTML = reviewHTML;
-
     localStorage.setItem('k_dev_eng_adv', score);
+
+    // STEP 2: Background Sync (Fast Mode)
+    const formData = new URLSearchParams();
+    formData.append('name', studentName);
+    formData.append('score', score + "/60");
+    formData.append('subject', "English_Advanced");
+    formData.append('date', new Date().toLocaleString());
 
     fetch(WEB_APP_URL, {
         method: "POST",
         mode: "no-cors",
-        body: JSON.stringify({
-            name: studentName,
-            score: score + "/60",
-            subject: "English_Advanced",
-            date: new Date().toLocaleString()
-        })
+        header: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
     }).then(() => {
-        document.getElementById('sync-status').innerText = "Record successfully saved to English Database.";
+        document.getElementById('sync-status').innerText = "Record secured in English Database.";
+    }).catch(() => {
+        document.getElementById('sync-status').innerText = "Offline: Results saved to local storage.";
     });
 }
 </script>
